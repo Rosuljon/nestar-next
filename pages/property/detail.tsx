@@ -1,5 +1,5 @@
 import React, { ChangeEvent, useEffect, useState } from 'react';
-import { Box, Button, Checkbox, Stack, Typography } from '@mui/material';
+import { Box, Button, CircularProgress, Stack, Typography } from '@mui/material';
 import useDeviceDetect from '../../libs/hooks/useDeviceDetect';
 import withLayoutFull from '../../libs/components/layout/LayoutFull';
 import { NextPage } from 'next';
@@ -64,12 +64,12 @@ const PropertyDetail: NextPage = ({ initialComment, ...props }: any) => {
 	const [createComment] = useMutation(CREATE_COMMENT);
 
 	const {
-		loading: getPropertysLoading, // bu processda aniq animationlardi korsatar ekan
+		loading: getPropertyLoading, // bu processda aniq animationlardi korsatar ekan
 		data: getPropertyData, // data kirib kelgunga qadar error bulsa pasdagi erroni beradi
 		error: getPropertyError,
 		refetch: getPropertyRefetch,
 	} = useQuery(GET_PROPERTY, {
-		fetchPolicy: 'cache-and-network', // birinchi cache oqib keyin networkga o'tiladi
+		fetchPolicy: 'network-only', // birinchi cache oqib keyin networkga o'tiladi
 		variables: { input: propertyId },
 		skip: !propertyId,
 		notifyOnNetworkStatusChange: true,
@@ -193,6 +193,13 @@ const PropertyDetail: NextPage = ({ initialComment, ...props }: any) => {
 		}
 	};
 
+	if (getPropertyLoading) {
+		return (
+			<Stack sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', height: '1080px' }}>
+				<CircularProgress size={'4rem'} />
+			</Stack>
+		);
+	}
 	if (device === 'mobile') {
 		return <div>PROPERTY DETAIL PAGE</div>;
 	} else {
