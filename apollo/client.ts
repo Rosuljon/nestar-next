@@ -4,7 +4,7 @@ import createUploadLink from 'apollo-upload-client/public/createUploadLink.js';
 import { WebSocketLink } from '@apollo/client/link/ws';
 import { getMainDefinition } from '@apollo/client/utilities';
 import { onError } from '@apollo/client/link/error';
-import { getJwtToken } from '../libs/auth';
+import { getJwtToken, logOut } from '../libs/auth';
 import { TokenRefreshLink } from 'apollo-link-token-refresh';
 let apolloClient: ApolloClient<NormalizedCacheObject>;
 
@@ -57,18 +57,25 @@ function createIsomorphicLink() {
 			},
 		});
 
-		const errorLink = onError(({ graphQLErrors, networkError, response }) => {
+		const errorLink = onError(({ graphQLErrors, networkError }) => {
+			// GraphQL error log
 			if (graphQLErrors) {
-				graphQLErrors.map(({ message, locations, path, extensions }) =>
-					console.log(`[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`),
-				);
+				graphQLErrors.forEach(({ message, locations, path, extensions }) => {
+					console.log(`[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`);
+
+					// JWT expired yoki UNAUTHENTICATED bo‘lsa
+					if (extensions?.code === 'UNAUTHENTICATED' || message?.toLowerCase().includes('jwt expired')) {
+						logOut();
+						window.location.href = '/account/join';
+					}
+				});
 			}
-			if (networkError) console.log(`[Network error]: ${networkError}`);
-			// @ts-ignore
-			if (networkError?.statusCode === 401) {
+
+			// Network error log
+			if (networkError) {
+				console.log(`[Network error]: ${networkError}`);
 			}
 		});
-
 		const splitLink = split(
 			({ query }) => {
 				const definition = getMainDefinition(query);
