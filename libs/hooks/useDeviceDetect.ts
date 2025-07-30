@@ -5,9 +5,10 @@ const useDeviceDetect = (): string => {
 
 	useEffect(() => {
 		const userAgent = navigator.userAgent;
+
 		const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
 		setDevice(isMobile ? 'mobile' : 'desktop');
-	}, [device]);
+	}, []);
 
 	return device;
 };
