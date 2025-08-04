@@ -7,9 +7,11 @@ import { REACT_APP_API_URL, propertySquare } from '../../config';
 import { PropertyInput } from '../../types/property/property.input';
 import axios from 'axios';
 import { getJwtToken } from '../../auth';
-import { sweetMixinErrorAlert } from '../../sweetAlert';
-import { useReactiveVar } from '@apollo/client';
+import { sweetErrorHandling, sweetMixinErrorAlert } from '../../sweetAlert';
+import { useMutation, useQuery, useReactiveVar } from '@apollo/client';
 import { userVar } from '../../../apollo/store';
+import { CREATE_PROPERTY, UPDATE_PROPERTY } from '../../../apollo/user/mutation';
+import { GET_PROPERTY } from '../../../apollo/user/query';
 
 const AddProperty = ({ initialValues, ...props }: any) => {
 	const device = useDeviceDetect();
@@ -22,7 +24,18 @@ const AddProperty = ({ initialValues, ...props }: any) => {
 	const user = useReactiveVar(userVar);
 
 	/** APOLLO REQUESTS **/
-	let getPropertyData: any, getPropertyLoading: any;
+	const [createProperty] = useMutation(CREATE_PROPERTY);
+	const [updateProperty] = useMutation(UPDATE_PROPERTY);
+
+	const {
+		loading: getPropertyLoading,
+		data: getPropertyData,
+		error: getPropertysError,
+		refetch: getPropertyRefetch,
+	} = useQuery(GET_PROPERTY, {
+		fetchPolicy: 'network-only',
+		variables: { input: router.query.propertyId },
+	});
 
 	/** LIFECYCLES **/
 	useEffect(() => {
@@ -49,33 +62,37 @@ const AddProperty = ({ initialValues, ...props }: any) => {
 			const formData = new FormData();
 			const selectedFiles = inputRef.current.files;
 
-			if (selectedFiles.length == 0) return false;
+			if (selectedFiles.length === 0) return false;
 			if (selectedFiles.length > 5) throw new Error('Cannot upload more than 5 images!');
+
+			// Dynamic variables.files
+			const filesLength = selectedFiles.length;
+			const variables = {
+				files: Array(filesLength).fill(null),
+				target: 'property',
+			};
+
+			// Dynamic map
+			const map: { [key: string]: string[] } = {};
+			for (let i = 0; i < filesLength; i++) {
+				map[`${i}`] = [`variables.files.${i}`];
+			}
 
 			formData.append(
 				'operations',
 				JSON.stringify({
 					query: `mutation ImagesUploader($files: [Upload!]!, $target: String!) { 
-						imagesUploader(files: $files, target: $target)
-				  }`,
-					variables: {
-						files: [null, null, null, null, null],
-						target: 'property',
-					},
+					imagesUploader(files: $files, target: $target)
+			  	}`,
+					variables,
 				}),
 			);
-			formData.append(
-				'map',
-				JSON.stringify({
-					'0': ['variables.files.0'],
-					'1': ['variables.files.1'],
-					'2': ['variables.files.2'],
-					'3': ['variables.files.3'],
-					'4': ['variables.files.4'],
-				}),
-			);
-			for (const key in selectedFiles) {
-				if (/^\d+$/.test(key)) formData.append(`${key}`, selectedFiles[key]);
+
+			formData.append('map', JSON.stringify(map));
+
+			// Append actual files
+			for (let i = 0; i < filesLength; i++) {
+				formData.append(`${i}`, selectedFiles[i]);
 			}
 
 			const response = await axios.post(`${process.env.REACT_APP_API_GRAPHQL_URL}`, formData, {
@@ -87,9 +104,12 @@ const AddProperty = ({ initialValues, ...props }: any) => {
 			});
 
 			const responseImages = response.data.data.imagesUploader;
-
 			console.log('+responseImages: ', responseImages);
-			setInsertPropertyData({ ...insertPropertyData, propertyImages: responseImages });
+
+			setInsertPropertyData({
+				...insertPropertyData,
+				propertyImages: responseImages,
+			});
 		} catch (err: any) {
 			console.log('err: ', err.message);
 			await sweetMixinErrorAlert(err.message);
@@ -115,9 +135,37 @@ const AddProperty = ({ initialValues, ...props }: any) => {
 		}
 	};
 
-	const insertPropertyHandler = useCallback(async () => {}, [insertPropertyData]);
+	const insertPropertyHandler = useCallback(async () => {
+		try {
+			const result = await createProperty({
+				variables: {
+					input: insertPropertyData,
+				},
+			});
+			await router.push({
+				pathname: '/mypage',
+				query: {
+					category: 'myProperties',
+				},
+			});
+		} catch (err: any) {
+			sweetErrorHandling(err).then();
+		}
+	}, [insertPropertyData]);
 
-	const updatePropertyHandler = useCallback(async () => {}, [insertPropertyData]);
+	const updatePropertyHandler = useCallback(async () => {
+		try {
+			//@ts-ignore
+			insertPropertyData._id = getPropertyData?.getProperty?._id;
+			const result = await updateProperty({
+				variables: {
+					input: insertPropertyData,
+				},
+			});
+		} catch (err: any) {
+			sweetErrorHandling(err).then();
+		}
+	}, [insertPropertyData]);
 
 	if (user?.memberType !== 'AGENT') {
 		router.back();
