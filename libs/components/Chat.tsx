@@ -144,59 +144,30 @@ const Chat = () => {
 							<Box flexDirection={'row'} style={{ display: 'flex' }} sx={{ m: '10px 0px' }} component={'div'}>
 								<div className={'welcome'}>Welcome to Live chat!</div>
 							</Box>
-							{messagesList.map((ele: MessagePayload, index: number) => {
+							{messagesList.map((ele: MessagePayload) => {
 								const { text, memberData } = ele;
 								const memberImage = memberData?.memberImage
 									? `${REACT_APP_API_URL}/${memberData.memberImage}`
 									: '/img/profile/defaultUser.svg';
-								const key = `${memberData?._id || 'unknown'}-${index}`;
-								const isMine = memberData?._id === user?._id;
 
-								return (
+								return memberData?._id === user?._id ? (
 									<Box
-										key={key}
-										component="div"
-										display="flex"
-										flexDirection={isMine ? 'row-reverse' : 'row'}
-										alignItems="flex-end"
-										sx={{ my: 1 }}
+										component={'div'}
+										flexDirection={'row'}
+										style={{ display: 'flex' }}
+										alignItems={'flex-end'}
+										justifyContent={'flex-end'}
+										sx={{ m: '10px 0px' }}
 									>
-										{!isMine && (
-											<Avatar
-												alt={memberData?.memberNick || 'User'}
-												src={memberImage}
-												sx={{ width: 40, height: 40, mr: 1 }}
-											/>
-										)}
-
-										<Box display="flex" flexDirection="column" alignItems={isMine ? 'flex-end' : 'flex-start'}>
-											{!isMine && (
-												<Box component="span" sx={{ fontSize: '0.8rem', color: '#666', mb: 0.3 }}>
-													{memberData?.memberNick || 'User'}
-												</Box>
-											)}
-
-											<Box
-												component="div"
-												sx={{
-													px: 2,
-													py: 1,
-													borderRadius: 2,
-													maxWidth: '300px',
-													bgcolor: isMine ? '#1976d2' : '#f0f0f0',
-													color: isMine ? '#fff' : '#000',
-													boxShadow: 1,
-													wordBreak: 'break-word',
-												}}
-											>
-												{text}
-											</Box>
-										</Box>
+										<div className={'msg-right'}>{text}</div>
+									</Box>
+								) : (
+									<Box flexDirection={'row'} style={{ display: 'flex' }} sx={{ m: '10px 0px' }} component={'div'}>
+										<Avatar alt={'jonik'} src={memberImage} />
+										<div className={'msg-left'}>{text}</div>
 									</Box>
 								);
 							})}
-
-							<></>
 						</Stack>
 					</ScrollableFeed>
 				</Box>
