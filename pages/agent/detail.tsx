@@ -193,19 +193,47 @@ const AgentDetail: NextPage = ({ initialInput, initialComment, ...props }: any) 
 		return (
 			<Stack className={'agent-detail-page'}>
 				<Stack className={'container'}>
-					<Stack className={'agent-info'}>
-						<img
-							src={agent?.memberImage ? `${REACT_APP_API_URL}/${agent?.memberImage}` : '/img/profile/defaultUser.svg'}
-							alt=""
-						/>
-						<Box component={'div'} className={'info'} onClick={() => redirectToMemberPageHandler(agent?._id as string)}>
-							<strong>{agent?.memberFullName ?? agent?.memberNick}</strong>
-							<div>
-								<img src="/img/icons/call.svg" alt="" />
-								<span>{agent?.memberPhone}</span>
-							</div>
-						</Box>
-					</Stack>
+					<Box
+						style={{ width: '100%' }}
+						display={'flex'}
+						flexDirection={'row'}
+						justifyContent={'space-between'}
+						alignItems={'center'}
+					>
+						<Stack className={'agent-info'}>
+							<img
+								src={agent?.memberImage ? `${REACT_APP_API_URL}/${agent?.memberImage}` : '/img/profile/defaultUser.svg'}
+								alt=""
+							/>
+							<Box
+								component={'div'}
+								className={'info'}
+								onClick={() => redirectToMemberPageHandler(agent?._id as string)}
+							>
+								<strong>{agent?.memberFullName ?? agent?.memberNick}</strong>
+								<div>
+									<img src="/img/icons/call.svg" alt="" />
+									<span>{agent?.memberPhone}</span>
+								</div>
+							</Box>
+						</Stack>
+						<Button
+							style={{
+								backgroundColor: '#eb6753',
+								color: '#fff',
+								padding: '8px 16px',
+								borderRadius: '8px',
+								textTransform: 'none',
+								fontWeight: 500,
+								height: '40px',
+								width: '140px',
+								// marginRight: '100px',
+							}}
+							onClick={() => redirectToMemberPageHandler(agent?._id as string)}
+						>
+							Agent Detail
+						</Button>
+					</Box>
 					<Stack className={'agent-home-list'}>
 						<Stack className={'card-wrap'}>
 							{agentProperties.map((property: Property) => {

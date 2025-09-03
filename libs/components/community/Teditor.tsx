@@ -105,6 +105,15 @@ const TuiEditor = () => {
 			});
 		} catch (err: any) {
 			console.log(err);
+
+			// Agar GraphQL validation xatosi bo'lsa
+			if (err?.graphQLErrors?.length) {
+				const message = err.graphQLErrors[0].message; // birinchi xatoni olish
+				sweetErrorHandling(new Error(message)).then();
+				return;
+			}
+
+			// Boshqa xatolar uchun default
 			sweetErrorHandling(new Error(Message.INSERT_ALL_INPUTS)).then();
 		}
 	};
